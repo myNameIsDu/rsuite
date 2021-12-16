@@ -969,3 +969,15 @@ export function getTreeNodeIndent(rtl, layer, absolute = false) {
     [rtl ? 'paddingRight' : 'paddingLeft']: offset
   };
 }
+
+export function createDragNodeMover(label: any, container) {
+  const dragNode = document.createElement('div');
+  dragNode.className = 'rs-tree-drag-node-mover';
+  dragNode.innerHTML = label;
+  container.appendChild(dragNode);
+  return dragNode;
+}
+
+export function removeDragNodeMover(dragNode) {
+  dragNode.parentNode?.removeChild(dragNode);
+}

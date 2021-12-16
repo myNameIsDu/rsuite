@@ -6,10 +6,12 @@ import Spinner from '@rsuite/icons/legacy/Spinner';
 import TreeContext from '../Tree/TreeContext';
 import reactToString from '../utils/reactToString';
 import { useClassNames } from '../utils';
-import { getTreeNodeIndent } from '../utils/treeUtils';
+import { createDragNodeMover, getTreeNodeIndent, removeDragNodeMover } from '../utils/treeUtils';
 import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import isNil from 'lodash/isNil';
 
 export interface TreeNodeProps extends WithAsProps {
+  treeRef: HTMLDivElement | null;
   rtl?: boolean;
   layer: number;
   value?: any;
@@ -48,6 +50,7 @@ const TreeNode: RsRefForwardingComponent<'div', TreeNodeProps> = forwardRef<
 >(
   (
     {
+      treeRef,
       as: Component = 'div',
       rtl,
       label,
@@ -83,7 +86,9 @@ const TreeNode: RsRefForwardingComponent<'div', TreeNodeProps> = forwardRef<
     ref
   ) => {
     const { prefix, merge, withClassPrefix } = useClassNames(classPrefix);
-    const { dragNodeRef } = useContext(TreeContext);
+    const { dragNodeMover } = useContext(TreeContext);
+
+    const nodeLabel = onRenderTreeNode ? onRenderTreeNode(nodeData) : label;
 
     const getTitle = useCallback(() => {
       if (typeof label === 'string') {
@@ -122,14 +127,16 @@ const TreeNode: RsRefForwardingComponent<'div', TreeNodeProps> = forwardRef<
 
     const handleDragStart = useCallback(
       (event: React.DragEvent) => {
-        const dragNode = dragNodeRef?.current;
-
-        if (dragNode) {
-          event.dataTransfer?.setDragImage(dragNode, 0, 0);
+        const currentDragNodeMover = createDragNodeMover(nodeLabel, treeRef!);
+        if (!isNil(dragNodeMover)) {
+          dragNodeMover.current = currentDragNodeMover;
+        }
+        if (!isNil(currentDragNodeMover)) {
+          event.dataTransfer?.setDragImage(dragNodeMover?.current, 0, 0);
         }
         onDragStart?.(nodeData, event);
       },
-      [dragNodeRef, nodeData, onDragStart]
+      [dragNodeMover, nodeData, onDragStart]
     );
 
     const handleDragEnter = useCallback(
@@ -162,6 +169,7 @@ const TreeNode: RsRefForwardingComponent<'div', TreeNodeProps> = forwardRef<
       (event: React.DragEvent) => {
         event.stopPropagation();
         onDragEnd?.(nodeData, event);
+        removeDragNodeMover(dragNodeMover?.current);
       },
       [nodeData, onDragEnd]
     );
@@ -171,6 +179,7 @@ const TreeNode: RsRefForwardingComponent<'div', TreeNodeProps> = forwardRef<
         event.preventDefault();
         event.stopPropagation();
         onDrop?.(nodeData, event);
+        removeDragNodeMover(dragNodeMover?.current);
       },
       [nodeData, onDrop]
     );
@@ -228,9 +237,7 @@ const TreeNode: RsRefForwardingComponent<'div', TreeNodeProps> = forwardRef<
           tabIndex={-1}
           onClick={handleSelect}
         >
-          <span className={contentClasses}>
-            {onRenderTreeNode ? onRenderTreeNode(nodeData) : label}
-          </span>
+          <span className={contentClasses}>{nodeLabel}</span>
         </span>
       );
     };

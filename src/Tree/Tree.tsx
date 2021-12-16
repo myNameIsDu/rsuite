@@ -146,9 +146,9 @@ export interface TreeProps<ValueType = string | number>
 
 const Tree: RsRefForwardingComponent<'div', TreeProps> = React.forwardRef(
   (props: TreeProps, ref: React.Ref<any>) => {
-    const dragNodeRef = useRef();
+    const dragNodeMover = useRef(null);
     return (
-      <TreeContext.Provider value={{ inline: true, dragNodeRef }}>
+      <TreeContext.Provider value={{ inline: true, dragNodeMover }}>
         <TreePicker ref={ref} {...props} />
       </TreeContext.Provider>
     );

@@ -2,7 +2,7 @@ import React from 'react';
 
 export interface TreeContextProps {
   inline?: boolean;
-  dragNodeRef?: React.MutableRefObject<any>;
+  dragNodeMover?: React.MutableRefObject<any>;
 }
 
 const TreeContext = React.createContext<TreeContextProps>({});
